@@ -141,30 +141,6 @@ class _TodoState extends State<TodoUi> {
         });
   }
 
-/*  Widget card(String task) {
-    return Card(
-      elevation: 10.0,
-      margin: EdgeInsets.symmetric(
-        horizontal: 10.0,
-        vertical: 5.0,
-      ),
-      child: Container(
-        padding: EdgeInsets.all(2.0),
-        child: ListTile(
-          title: Text(
-            "$task",
-            style: TextStyle(
-              fontFamily: "Raleway",
-              fontSize: 22.0,
-            ),
-          ),
-          onLongPress: () {
-            print("Should get deleted");
-          },
-        ),
-      ),
-    );
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -238,34 +214,3 @@ class _TodoState extends State<TodoUi> {
     );
   }
 }
-
-/*Scaffold(
-      floatingActionButton: FloatingActionButton(
-        onPressed: showAlertDialog,
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
-        ),
-        backgroundColor: Colors.purple,
-      ),
-      appBar: AppBar(
-        title: Text(
-          'Tasks',
-          style: TextStyle(
-            fontFamily: "Raleway",
-            fontWeight: FontWeight.bold,
-            fontSize: 30.0,
-          ),
-        ),
-        backgroundColor: Colors.black,
-        centerTitle: true,
-      ),
-      backgroundColor: Colors.black,
-      body: SingleChildScrollView(
-        child: Column(
-          children: <Widget>[
-            card("first todo"),
-          ],
-        ),
-      ),
-    );*/
