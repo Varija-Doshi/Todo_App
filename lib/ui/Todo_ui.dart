@@ -52,11 +52,18 @@ class _TodoState extends State<TodoUi> {
                 fontSize: 22.0,
               ),
             ),
-            
-            onLongPress: () {
-              dbhelper.deletedata(row['id']);
-              setState(() {});
-            },
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                GestureDetector(
+                  child: Icon(Icons.delete, color: Colors.red ),
+                  onTap:  () {
+                      dbhelper.deletedata(row['id']);
+                      setState(() {});
+                          },
+                  ),
+              ],
+            ),
           ),
         ),
       ));
