@@ -247,6 +247,15 @@ class _TodoState extends State<TodoUi> {
                 ),
                 backgroundColor: Colors.black,
                 centerTitle: true,
+                leading: CircleAvatar(
+                  radius: 5.0,
+                  backgroundColor: Colors.white,
+                  child: Image.asset(
+                    "assets/logo.png",
+                    height: 70.0,
+                    width: 70.0,
+                  ),
+                ),
               ),
               floatingActionButton: FloatingActionButton(
                 onPressed: showAlertDialog,
