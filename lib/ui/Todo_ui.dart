@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:Todo_App/database/database_helper.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 class TodoUi extends StatefulWidget {
   @override
@@ -10,60 +11,115 @@ class _TodoState extends State<TodoUi> {
   final dbhelper = Databasehelper.instance;
 
   final _controllerTask = TextEditingController();
+  final _controllerDesc = TextEditingController();
   bool toogle = true;
+  bool check_edit = false;
   String errorText = "";
-  String newTask = "";
+  String newTask, editedtask, newDescription, editedDescription = "";
+  int editId;
   var allTasks = List();
+  var alldesc = List();
   List<Widget> children = new List<Widget>();
 
   void addTodo() async {
     Map<String, dynamic> row = {
       Databasehelper.columnName: newTask,
+      Databasehelper.columnDescription: newDescription
     };
     final id = await dbhelper.insert(row);
-    print(id);
+    print("Add todo id: {$id}");
     Navigator.pop(context);
     newTask = "";
+    newDescription = "";
     setState(() {
       toogle = true;
       errorText = "";
     });
   }
 
+  void update(int updateId) async {
+    Map<String, dynamic> row = {
+      Databasehelper.columnID: updateId,
+      Databasehelper.columnName: editedtask,
+      Databasehelper.columnDescription: editedDescription
+    };
+    if (editedtask == "") editedtask = _controllerTask.text;
+    if (editedDescription == "") editedDescription = _controllerDesc.text;
+    dbhelper.update(row['id'], editedtask, editedDescription);
+    Navigator.pop(context);
+    editedtask = "";
+    editedDescription = "";
+    setState(() {
+      check_edit = false;
+    });
+  }
+
   Future<bool> query() async {
     allTasks = [];
+    alldesc = [];
     children = [];
     var allRows = await dbhelper.queryall();
     allRows.forEach((row) {
-      allTasks.add(row.toString());
+      allTasks.add(row['task'].toString());
+      alldesc.add(row['description'].toString());
+      //alldesc.add(row.toString());
       children.add(Card(
-        elevation: 10.0,
+        color: Colors.black,
+        shadowColor: Colors.yellow,
+        elevation: 15.0,
         margin: EdgeInsets.symmetric(
           horizontal: 10.0,
           vertical: 5.0,
         ),
-        child: Container(
+        child: Slidable(
+          // was Container prev.
           //padding: EdgeInsets.all(10.0),
+          actionPane: SlidableDrawerActionPane(),
+          actionExtentRatio: 0.25,
+          secondaryActions: <Widget>[
+            IconSlideAction(
+              caption: 'Delete',
+              color: Colors.red,
+              icon: Icons.delete,
+              onTap: () {
+                dbhelper.deletedata(row['id']);
+                setState(() {});
+              },
+            ),
+            IconSlideAction(
+              caption: 'Edit',
+              color: Colors.white,
+              foregroundColor: Colors.blue,
+              icon: Icons.edit,
+              onTap: () {
+                check_edit = true;
+                _controllerTask.text = row['task'];
+                _controllerDesc.text = row['description'];
+                newTask = row['task'];
+                newDescription = row['description'];
+                editId = row['id'];
+                print(" update id : {$row['id']}");
+                showAlertDialog();
+              },
+            ),
+          ],
           child: ListTile(
             title: Text(
               row['task'],
               style: TextStyle(
                 fontFamily: "Raleway",
-                fontSize: 22.0,
+                fontSize: 24.0,
+                color: Colors.purple,
               ),
             ),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: <Widget>[
-                GestureDetector(
-                  child: Icon(Icons.delete, color: Colors.red ),
-                  onTap:  () {
-                      dbhelper.deletedata(row['id']);
-                      setState(() {});
-                          },
-                  ),
-              ],
+            subtitle: Text(
+              row['description'],
+              style: TextStyle(
+                fontFamily: "Raleway",
+                fontSize: 18.0,
+              ),
             ),
+            //isThreeLine: true ,
           ),
         ),
       ));
@@ -72,7 +128,11 @@ class _TodoState extends State<TodoUi> {
   }
 
   void showAlertDialog() {
-    _controllerTask.text = "";
+    if (!check_edit) {
+      _controllerTask.text = "";
+      _controllerDesc.text = "";
+    }
+
     showDialog(
         context: context,
         builder: (context) {
@@ -91,7 +151,10 @@ class _TodoState extends State<TodoUi> {
                     controller: _controllerTask,
                     autofocus: true,
                     onChanged: (value) {
-                      newTask = value;
+                      if (!check_edit)
+                        newTask = value;
+                      else
+                        editedtask = value;
                     },
                     style: TextStyle(
                       fontFamily: "Raleway",
@@ -99,10 +162,28 @@ class _TodoState extends State<TodoUi> {
                     ),
                     decoration: InputDecoration(
                       errorText: toogle ? null : errorText,
+                      hintText: 'title',
+                    ),
+                  ),
+                  TextField(
+                    controller: _controllerDesc,
+                    autofocus: true,
+                    onChanged: (value) {
+                      if (!check_edit)
+                        newDescription = value;
+                      else
+                        editedDescription = value;
+                    },
+                    style: TextStyle(
+                      fontFamily: "Raleway",
+                      fontSize: 22.0,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'descrption',
                     ),
                   ),
                   Padding(
-                    padding: EdgeInsets.only(top: 10.0),
+                    padding: EdgeInsets.only(top: 20.0),
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -120,9 +201,10 @@ class _TodoState extends State<TodoUi> {
                               errorText = "Too long!!";
                               toogle = false;
                             });
-                          } else {
+                          } else if (!check_edit) {
                             addTodo();
-                          }
+                          } else
+                            update(editId);
                         },
                         child: Text(
                           "Done!",
@@ -141,7 +223,6 @@ class _TodoState extends State<TodoUi> {
         });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder(
@@ -157,7 +238,7 @@ class _TodoState extends State<TodoUi> {
             return Scaffold(
               appBar: AppBar(
                 title: Text(
-                  'Tasks',
+                  ' On Your List... ',
                   style: TextStyle(
                     fontFamily: "Raleway",
                     fontWeight: FontWeight.bold,
@@ -176,14 +257,21 @@ class _TodoState extends State<TodoUi> {
                 backgroundColor: Colors.purple,
               ),
               body: Center(
-                child: Text("No Task available"),
+                child: Text(
+                  "Whats on your day ?? ",
+                  style: TextStyle(
+                      fontSize: 30.0,
+                      fontFamily: "Raleway",
+                      fontStyle: FontStyle.italic,
+                      color: Colors.lightGreen),
+                ),
               ),
             );
           } else {
             return Scaffold(
               appBar: AppBar(
                 title: Text(
-                  'Tasks',
+                  'On Your List.....',
                   style: TextStyle(
                     fontFamily: "Raleway",
                     fontWeight: FontWeight.bold,
@@ -192,6 +280,15 @@ class _TodoState extends State<TodoUi> {
                 ),
                 backgroundColor: Colors.black,
                 centerTitle: true,
+                leading: CircleAvatar(
+                  radius: 5.0,
+                  backgroundColor: Colors.white,
+                  child: Image.asset(
+                    "assets/logo.png",
+                    height: 70.0,
+                    width: 70.0,
+                  ),
+                ),
               ),
               floatingActionButton: FloatingActionButton(
                 onPressed: showAlertDialog,
@@ -214,3 +311,23 @@ class _TodoState extends State<TodoUi> {
     );
   }
 }
+
+/*Slidable(
+                    child : null,
+                    actionExtentRatio: 0.25,
+                    actionPane: SlidableDrawerActionPane(),
+                    secondaryActions: <Widget>[
+                      IconSlideAction(
+                        caption: 'Delete',
+                        color: Colors.red,
+                        icon: Icons.delete,
+                        onTap: (){},
+                      ),
+                      IconSlideAction(
+                        caption: 'Edit',
+                        color: Colors.blue,
+                        icon: Icons.edit,
+                        onTap: (){},
+                      ),
+                    ],
+                    ),*/

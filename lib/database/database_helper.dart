@@ -15,6 +15,7 @@ class Databasehelper {
   // column names
   static final columnID = 'id';
   static final columnName = "task";
+  static final columnDescription = "description";
 
   // a database
   static Database _database;
@@ -46,7 +47,8 @@ class Databasehelper {
     await db.execute('''
       CREATE TABLE $table (
         $columnID INTEGER PRIMARY KEY,
-        $columnName TEXT NOT NULL
+        $columnName TEXT NOT NULL,
+        $columnDescription TEXT NOT NULL
       );
       ''');
   }
@@ -67,6 +69,13 @@ class Databasehelper {
   Future<int> deletedata(int id) async {
     Database db = await instance.databse;
     var res = await db.delete(table, where: "id = ?", whereArgs: [id]);
+    return res;
+  }
+
+  Future<int> update(int id, String editedTask , String editedDescription) async {
+    Database db = await instance.databse;
+    var res = await db.update(table, {"task": editedTask, "id": id , "description": editedDescription},
+        where: "id = ?", whereArgs: [id]);
     return res;
   }
 }
